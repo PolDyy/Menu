@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block title %} Main {% endblock %}
+
+{% load draw_menu %}
+{% block body %}
+
+{% draw_menu 'main_menu' %}
+{% draw_menu 'another_menu' %}
+
+{% endblock %}

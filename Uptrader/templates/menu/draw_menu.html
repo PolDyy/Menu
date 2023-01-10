@@ -1,0 +1,14 @@
+<ul>
+  {% for cat in cats %}
+    <li>
+      {% if cat.id == selected_cat_id %}'
+        <a class="selected" href="?{{query}}&{{menu}}={{cat.id}}">{{cat.title}}</a>
+      {% else %}
+        <a href="?{{query}}&{{menu}}={{cat.id}}"> {{cat.title}} </a>
+      {% endif %}
+    </li>
+    {% if cat.child_cats %}
+      {% include 'menu/draw_menu.html' with cats=cat.child_cats %}
+    {% endif %}
+  {% endfor %}
+</ul>

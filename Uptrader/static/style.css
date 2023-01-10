@@ -1,0 +1,6 @@
+a {
+    color: inherit;
+}
+a.selected {
+    color: darkgreen;
+}
