@@ -13,7 +13,7 @@ ______________________
 
 `python -m venv venv`
 
-`source venv/Scripts/activate` или source venv/bin/activate
+`source venv/Scripts/activate` или `source venv/bin/activate`
 
 3) Переходим в директорию Uptrader:
 
