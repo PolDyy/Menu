@@ -11,5 +11,5 @@ class MenuAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('title', 'parent', 'menu', 'slug')
+    list_display = ('id', 'title', 'path', 'menu', 'slug')
     prepopulated_fields = {'slug': ('title',)}

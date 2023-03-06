@@ -1,63 +1,60 @@
-from django.template import Library
+from django import template
 from ..models import Category
+from django.db import connection, reset_queries
 
-
-register = Library()
+register = template.Library()
 
 
 @register.inclusion_tag('menu/draw_menu.html', takes_context=True)
 def draw_menu(context: dict, menu: str) -> dict:
-
+    """Тэг шаблона возвращающий вложенное меню."""
+    dict_to_return = dict()
+    reset_queries()
+    path = ""
+    depth = 0
     try:
-        categories = Category.objects.filter(menu__title=menu)
-        cat_values = categories.values()
-        first_cat = [cat for cat in cat_values.filter(parent=None)]
-        selected_cat_id = int(context['request'].GET[menu])
-        selected_cat = categories.get(pk=selected_cat_id)
-        selected_cat_id_list = get_selected_cat_id_list(selected_cat, first_cat, selected_cat_id)
 
-        for cat in first_cat:
-            if cat['id'] in selected_cat_id_list:
-                cat['child_cats'] = get_child_cats(cat_values, cat['id'], selected_cat_id_list)
-        dict_to_return = {'cats': first_cat}
+        selected_category_id = int(context['request'].GET[menu])
+        categories = list(Category.objects.select_related("menu").filter(menu__title=menu).values())
+        for category in categories:
+            if category['id'] == selected_category_id:
+                path = category['path']
+                depth = category['depth']
 
-    except:
-        selected_cat_id = None
-        dict_to_return = {
-            'cats': [
-                cat for cat in Category.objects.filter(menu__title=menu, parent=None).values()
-            ]
-        }
+    except KeyError:
+        categories = list(Category.objects.select_related("menu").filter(menu__title=menu)\
+                          .filter(depth=0).order_by('path').values())
 
+    dict_to_return['queryset'] = categories
+    dict_to_return['depth'] = depth
+    dict_to_return['path'] = path
     dict_to_return['menu'] = menu
-    dict_to_return['selected_cat_id'] = selected_cat_id
     dict_to_return['query'] = get_query(context, menu)
-
+    print(len(connection.queries))
     return dict_to_return
 
 
-def get_selected_cat_id_list(selected_cat, first_cat: list, selected_cat_id: int) -> list:
-    selected_cat_id_list = []
-
-    while selected_cat:
-        selected_cat_id_list.append(selected_cat.id)
-        selected_cat = selected_cat.parent
-    if not selected_cat_id_list:
-        for cat in first_cat:
-            if cat['id'] == selected_cat_id:
-                selected_cat_id_list.append(selected_cat_id)
-    return selected_cat_id_list
+@register.simple_tag
+def get_level_elements(path, queryset, current_depth) -> list:
+    """Тег для получения элементов определенного уровня глубины."""
+    elements_list = []
+    for query in queryset:
+        if query["path"].startswith(path[:current_depth*2]) and query['depth'] == current_depth:
+            elements_list.append(query)
+    print(len(connection.queries))
+    return elements_list
 
 
-def get_child_cats(cat_values, cat_id: int, selected_cat_id_list: list) -> list:
-    cat_list = [cat for cat in cat_values.filter(parent_id=cat_id)]
-    for cat in cat_list:
-        if cat['id'] in selected_cat_id_list:
-            cat['child_cats'] = get_child_cats(cat_values, cat['id'], selected_cat_id_list)
-    return cat_list
+@register.filter
+def starts_with(value, arg):
+    """Фильтр проверяющий строки на совпадения."""
+    if value.startswith(arg):
+        return True
+    return False
 
 
 def get_query(context: dict, menu: str) -> str:
+    """Возвращает аргументы url."""
     args = []
     for arg in context['request'].GET:
         if arg != menu:
