@@ -1,0 +1,14 @@
+{% load draw_menu %}
+
+  {% get_level_elements path queryset 0 as elements %}
+  {% include 'menu/get_level_elements.html' with menu=menu query=query elements=elements current_depth=0%}
+
+
+<!--  {% for cat in cats %}-->
+<!--    <li>-->
+<!--        <a href="?{{query}}&{{menu}}={{cat.id}}"> {{cat.title}} </a>-->
+<!--    </li>-->
+<!--    {% if cat.child_cats %}-->
+<!--      {% include 'menu/draw_menu.html' with cats=cat.child_cats %}-->
+<!--    {% endif %}-->
+<!--  {% endfor %}-->
